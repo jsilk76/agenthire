@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import { google } from 'googleapis'
 import { createClient } from '@supabase/supabase-js'
+import ws from 'ws'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -23,6 +24,7 @@ try {
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
   process.env.VITE_SUPABASE_SECRET_KEY || '',
+  { global: { fetch }, realtime: { transport: ws } }
 )
 
 const app = express()
