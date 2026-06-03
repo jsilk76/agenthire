@@ -46,8 +46,8 @@ export default function Login() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-brand-red rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <span className="text-white font-bold text-3xl">B</span>
+          <div className="w-20 h-20 flex items-center justify-center mx-auto mb-4">
+            <img src="/logo.png" alt="AgentHire Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-2xl font-bold text-white">AgentHire</h1>
           <p className="text-white/50 text-sm mt-1">Burtch Team · Century 21 Sunbelt</p>

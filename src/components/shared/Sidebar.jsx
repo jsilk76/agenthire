@@ -22,8 +22,8 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="p-6 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-brand-red rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">B</span>
+          <div className="w-9 h-9 flex items-center justify-center shrink-0">
+            <img src="/logo.png" alt="AgentHire Logo" className="w-full h-full object-contain" />
           </div>
           <div>
             <p className="text-white font-bold text-sm leading-tight">AgentHire</p>
