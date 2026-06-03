@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 
-const API = 'http://localhost:3001/api/gmail'
+const API = (import.meta.env.VITE_API_URL || 'http://localhost:3001') + '/api/gmail'
 
 // ── Small helpers ─────────────────────────────────────────────────────────────
 function ScoreBar({ label, score }) {
@@ -27,11 +27,10 @@ function ScorePill({ score }) {
   return <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${bg}`}><Star size={10} />{score}</span>
 }
 
-// ── Auto-Import Modal — shows AI scores per job, lets user confirm ─────────────
+// ── Auto-Import Modal ─────────────────────────────────────────────────────────
 function AutoImportModal({ email, attachment, data, onClose, onSaved }) {
   const { addCandidate, updateCandidate } = useApp()
   const { resumeText, jobScores, bestJobId } = data
-
   const [form, setForm] = useState({
     name:      email.fromName  || '',
     emailAddr: email.fromEmail || '',
@@ -41,7 +40,6 @@ function AutoImportModal({ email, attachment, data, onClose, onSaved }) {
   const [saving, setSaving]     = useState(false)
   const [error,  setError]      = useState('')
   const [showResume, setShowResume] = useState(false)
-
   const selectedScore = jobScores.find(j => j.job.id === form.jobId)
 
   async function handleSave(e) {
@@ -50,7 +48,6 @@ function AutoImportModal({ email, attachment, data, onClose, onSaved }) {
     setSaving(true)
     setError('')
     try {
-      // Create the candidate
       const candidate = await addCandidate({
         name:       form.name,
         email:      form.emailAddr,
@@ -59,7 +56,6 @@ function AutoImportModal({ email, attachment, data, onClose, onSaved }) {
         jobId:      form.jobId,
         source:     'email',
       })
-      // Attach the AI score (updateCandidate maps aiScore → score_breakdown + ai_score in DB)
       if (selectedScore?.score && candidate?.id) {
         await updateCandidate(candidate.id, { aiScore: selectedScore.score })
       }
@@ -74,8 +70,6 @@ function AutoImportModal({ email, attachment, data, onClose, onSaved }) {
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col">
-
-        {/* Header */}
         <div className="p-6 border-b border-gray-100 shrink-0">
           <div className="flex items-start justify-between">
             <div>
@@ -102,11 +96,7 @@ function AutoImportModal({ email, attachment, data, onClose, onSaved }) {
             )}
           </div>
         </div>
-
-        {/* Body — scrollable */}
         <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 space-y-5">
-
-          {/* Candidate info */}
           <div>
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Candidate Info</p>
             <div className="grid grid-cols-2 gap-3">
@@ -124,8 +114,6 @@ function AutoImportModal({ email, attachment, data, onClose, onSaved }) {
               <input className="input" type="email" value={form.emailAddr} onChange={e => setForm(f => ({ ...f, emailAddr: e.target.value }))} />
             </div>
           </div>
-
-          {/* Job scores */}
           {jobScores.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">AI Match — Select Job to Assign</p>
@@ -150,15 +138,13 @@ function AutoImportModal({ email, attachment, data, onClose, onSaved }) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 mb-1">
                         <p className="text-sm font-semibold text-gray-900">{job.title}</p>
-                        {score
-                          ? <ScorePill score={score.overallScore} />
-                          : <span className="text-xs text-gray-400">No score</span>}
+                        {score ? <ScorePill score={score.overallScore} /> : <span className="text-xs text-gray-400">No score</span>}
                       </div>
                       {score && (
                         <div className="space-y-1 mt-2">
-                          <ScoreBar label="License Status"    score={score.licenseStatus?.score    || 0} />
-                          <ScoreBar label="Local Market Fit"  score={score.localMarketFit?.score   || 0} />
-                          <ScoreBar label="Language Skills"   score={score.languageSkills?.score   || 0} />
+                          <ScoreBar label="License Status"     score={score.licenseStatus?.score    || 0} />
+                          <ScoreBar label="Local Market Fit"   score={score.localMarketFit?.score   || 0} />
+                          <ScoreBar label="Language Skills"    score={score.languageSkills?.score   || 0} />
                           <ScoreBar label="Production History" score={score.productionHistory?.score || 0} />
                           <p className="text-xs text-gray-500 italic mt-1.5 line-clamp-2">{score.summary}</p>
                         </div>
@@ -172,15 +158,11 @@ function AutoImportModal({ email, attachment, data, onClose, onSaved }) {
               </div>
             </div>
           )}
-
-          {/* No active jobs fallback */}
           {jobScores.length === 0 && (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
               No active job searches found. <Link to="/jobs" className="underline" onClick={onClose}>Create one</Link> to enable AI scoring.
             </div>
           )}
-
-          {/* Resume preview toggle */}
           <div className="border border-gray-200 rounded-xl overflow-hidden">
             <button
               type="button"
@@ -196,15 +178,12 @@ function AutoImportModal({ email, attachment, data, onClose, onSaved }) {
               </pre>
             )}
           </div>
-
           {error && (
             <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
               <AlertCircle size={14} /> {error}
             </div>
           )}
         </form>
-
-        {/* Footer */}
         <div className="p-6 border-t border-gray-100 flex gap-3 shrink-0">
           <button
             type="submit"
@@ -224,7 +203,7 @@ function AutoImportModal({ email, attachment, data, onClose, onSaved }) {
   )
 }
 
-// ── Per-attachment import button ───────────────────────────────────────────────
+// ── Per-attachment import button ──────────────────────────────────────────────
 function AttachmentImportButton({ email, attachment, onSaved }) {
   const [loading,  setLoading]  = useState(false)
   const [imported, setImported] = useState(false)
@@ -278,7 +257,6 @@ function AttachmentImportButton({ email, attachment, onSaved }) {
         </button>
         {error && <p className="text-xs text-red-500 max-w-[180px] text-right leading-tight">{error}</p>}
       </div>
-
       {modal && (
         <AutoImportModal
           email={email}
@@ -292,7 +270,7 @@ function AttachmentImportButton({ email, attachment, onSaved }) {
   )
 }
 
-// ── Email card (expand to see attachments) ─────────────────────────────────────
+// ── Email card ────────────────────────────────────────────────────────────────
 function EmailCard({ email, onSaved }) {
   const [expanded, setExpanded] = useState(false)
   const [importedIds, setImportedIds] = useState(new Set())
@@ -311,9 +289,7 @@ function EmailCard({ email, onSaved }) {
         onClick={() => setExpanded(v => !v)}
       >
         <div className={`mt-0.5 w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${allDone ? 'bg-green-100' : 'bg-blue-50'}`}>
-          {allDone
-            ? <CheckCircle size={15} className="text-green-600" />
-            : <Mail size={15} className="text-blue-500" />}
+          {allDone ? <CheckCircle size={15} className="text-green-600" /> : <Mail size={15} className="text-blue-500" />}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
@@ -340,7 +316,6 @@ function EmailCard({ email, onSaved }) {
           {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </div>
       </button>
-
       {expanded && (
         <div className="px-4 pb-4 pt-2 border-t border-gray-100 space-y-2">
           <p className="text-xs text-gray-400 mb-2">
@@ -357,11 +332,7 @@ function EmailCard({ email, onSaved }) {
               </div>
               {importedIds.has(attachment.attachmentId)
                 ? <span className="text-xs text-green-600 font-medium flex items-center gap-1"><CheckCircle size={11} /> Imported</span>
-                : <AttachmentImportButton
-                    email={email}
-                    attachment={attachment}
-                    onSaved={candidate => markImported(attachment.attachmentId, candidate)}
-                  />
+                : <AttachmentImportButton email={email} attachment={attachment} onSaved={candidate => markImported(attachment.attachmentId, candidate)} />
               }
             </div>
           ))}
@@ -371,7 +342,7 @@ function EmailCard({ email, onSaved }) {
   )
 }
 
-// ── Connect panel (shown when not logged in to Gmail) ─────────────────────────
+// ── Connect panel ─────────────────────────────────────────────────────────────
 function ConnectPanel() {
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState('')
@@ -402,13 +373,11 @@ function ConnectPanel() {
             AgentHire will scan your inbox for resume attachments (PDF, DOCX), extract the text,
             and automatically score each candidate against your open job searches using Claude AI.
           </p>
-
           {error && (
             <div className="flex items-start gap-2 mt-3 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
               <AlertCircle size={14} className="shrink-0 mt-0.5" /> {error}
             </div>
           )}
-
           <div className="flex items-center gap-3 mt-4">
             <button onClick={connect} disabled={loading} className="btn-primary flex items-center gap-2">
               {loading
@@ -423,7 +392,6 @@ function ConnectPanel() {
               <ExternalLink size={11} /> Google Cloud console
             </a>
           </div>
-
           <div className="mt-5 bg-white rounded-xl border border-amber-100 p-4 space-y-1.5">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">What happens when you click Connect</p>
             {[
@@ -464,7 +432,6 @@ export default function HiringInbox() {
     checkStatus()
   }, [])
 
-  // Re-scan when days filter changes (only if already connected)
   useEffect(() => {
     if (status?.connected) scan()
   }, [days])
@@ -514,11 +481,8 @@ export default function HiringInbox() {
     )
   }
 
-  const unimported = emails.length  // all cards start as unimported
-
   return (
     <div className="p-8 max-w-3xl">
-      {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Hiring Inbox</h1>
@@ -530,11 +494,7 @@ export default function HiringInbox() {
         </div>
         {status?.connected && (
           <div className="flex items-center gap-2">
-            <select
-              className="input text-sm py-1.5 w-auto"
-              value={days}
-              onChange={e => setDays(Number(e.target.value))}
-            >
+            <select className="input text-sm py-1.5 w-auto" value={days} onChange={e => setDays(Number(e.target.value))}>
               <option value={7}>Last 7 days</option>
               <option value={14}>Last 14 days</option>
               <option value={30}>Last 30 days</option>
@@ -548,7 +508,6 @@ export default function HiringInbox() {
         )}
       </div>
 
-      {/* Banners */}
       {justConnected && (
         <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl p-4 mb-5 text-green-800 text-sm font-medium">
           <CheckCircle size={16} /> Gmail connected! Scanning your inbox now…
@@ -565,10 +524,8 @@ export default function HiringInbox() {
         </div>
       )}
 
-      {/* Not connected */}
       {!status?.connected && <ConnectPanel />}
 
-      {/* Connected */}
       {status?.connected && (
         <>
           <div className="flex items-center justify-between mb-4">
@@ -580,7 +537,6 @@ export default function HiringInbox() {
               <Link2Off size={13} /> Disconnect
             </button>
           </div>
-
           {scanning ? (
             <div className="card text-center py-14">
               <Loader2 size={28} className="animate-spin text-brand-red mx-auto mb-3" />
@@ -596,11 +552,7 @@ export default function HiringInbox() {
           ) : (
             <div className="space-y-3">
               {emails.map(email => (
-                <EmailCard
-                  key={email.id}
-                  email={email}
-                  onSaved={() => setSavedCount(c => c + 1)}
-                />
+                <EmailCard key={email.id} email={email} onSaved={() => setSavedCount(c => c + 1)} />
               ))}
               <p className="text-xs text-gray-400 text-center pt-2">
                 {emails.length} email{emails.length !== 1 ? 's' : ''} found with resume attachments in the last {days} days
