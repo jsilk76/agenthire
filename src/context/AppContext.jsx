@@ -3,7 +3,8 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
 const AppContext = createContext(null)
 
-export const COUNTIES = ['Charlotte', 'Lee', 'Sarasota', 'DeSoto', 'Collier', 'Hillsborough', 'Pinellas', 'Manatee', 'Polk']
+export const COUNTIES = ['Charlotte', 'Lee', 'Sarasota', 'DeSoto', 'Collier',
+  'Hillsborough', 'Pinellas', 'Manatee', 'Polk']
 
 // ── Seed data shown while Supabase loads (or when not configured) ─────────────
 const seedJobs = [
@@ -79,7 +80,7 @@ const seedInterviews = [
   },
 ]
 
-// ── Context ───────────────────────────────────────────────────────────────────
+// ── Context ──────────────────────────────────────────────────────────────────
 export function AppProvider({ children }) {
   const [jobs, setJobs]             = useState(seedJobs)
   const [candidates, setCandidates] = useState(seedCandidates)
@@ -101,7 +102,6 @@ export function AppProvider({ children }) {
       if (jobsRes.error) throw jobsRes.error
       if (candidatesRes.error) throw candidatesRes.error
       if (interviewsRes.error) throw interviewsRes.error
-
       const countMap = {}
       candidatesRes.data.forEach(c => { countMap[c.job_id] = (countMap[c.job_id] || 0) + 1 })
       setJobs(jobsRes.data.map(j => ({ ...j, candidateCount: countMap[j.id] || 0 })))
@@ -141,6 +141,14 @@ export function AppProvider({ children }) {
     setJobs(prev => prev.map(j => j.id === id ? { ...j, ...updates } : j))
   }
 
+  async function deleteJob(id) {
+    if (isSupabaseConfigured) {
+      const { error } = await supabase.from('jobs').delete().eq('id', id)
+      if (error) throw error
+    }
+    setJobs(prev => prev.filter(j => j.id !== id))
+  }
+
   // ── Candidates ────────────────────────────────────────────────────────────
   async function addCandidate(candidate) {
     const payload = {
@@ -168,13 +176,12 @@ export function AppProvider({ children }) {
   }
 
   async function updateCandidate(id, updates) {
-    // Map any legacy camelCase keys to snake_case DB columns
     const dbUpdates = { ...updates }
     if ('resumeText' in dbUpdates) { dbUpdates.resume_text = dbUpdates.resumeText; delete dbUpdates.resumeText }
     if ('jobId'      in dbUpdates) { dbUpdates.job_id      = dbUpdates.jobId;      delete dbUpdates.jobId }
     if ('aiScore'    in dbUpdates) {
       const score = dbUpdates.aiScore
-      dbUpdates.ai_score       = score?.overallScore ?? score
+      dbUpdates.ai_score        = score?.overallScore ?? score
       dbUpdates.score_breakdown = score
       delete dbUpdates.aiScore
     }
@@ -228,7 +235,7 @@ export function AppProvider({ children }) {
     <AppContext.Provider value={{
       jobs, candidates, interviews, stats, dbReady,
       COUNTIES,
-      addJob, updateJob,
+      addJob, updateJob, deleteJob,
       addCandidate, updateCandidate,
       addInterview, updateInterview,
       reload: loadAll,

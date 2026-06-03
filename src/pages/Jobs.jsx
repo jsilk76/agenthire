@@ -1,12 +1,25 @@
 import React, { useState } from 'react'
-import { Link, Routes, Route, useNavigate } from 'react-router-dom'
-import { Plus, MapPin, Users, ChevronRight } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Plus, MapPin, Users, ChevronRight, Trash2 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import StatusBadge from '../components/shared/StatusBadge'
 
-function JobCard({ job }) {
+function JobCard({ job, onDelete }) {
+  const [confirming, setConfirming] = useState(false)
+
+  function handleDelete(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (confirming) {
+      onDelete(job.id)
+    } else {
+      setConfirming(true)
+      setTimeout(() => setConfirming(false), 3000) // auto-cancel after 3s
+    }
+  }
+
   return (
-    <Link to={`/jobs/${job.id}`} className="card hover:shadow-md transition-shadow group block">
+    <Link to={`/jobs/${job.id}`} className="card hover:shadow-md transition-shadow group block relative">
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
@@ -30,6 +43,22 @@ function JobCard({ job }) {
           </div>
           <ChevronRight size={16} className="text-gray-300 group-hover:text-brand-red" />
         </div>
+      </div>
+
+      {/* Delete button */}
+      <div className="absolute top-3 right-10">
+        <button
+          type="button"
+          onClick={handleDelete}
+          className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
+            confirming
+              ? 'bg-red-600 text-white'
+              : 'bg-gray-100 text-gray-400 hover:bg-red-50 hover:text-red-500'
+          }`}
+        >
+          <Trash2 size={12} />
+          {confirming ? 'Confirm?' : 'Delete'}
+        </button>
       </div>
     </Link>
   )
@@ -114,7 +143,7 @@ function NewJobForm({ onClose }) {
 }
 
 export default function Jobs() {
-  const { jobs } = useApp()
+  const { jobs, deleteJob } = useApp()
   const [showNew, setShowNew] = useState(false)
 
   return (
@@ -128,11 +157,9 @@ export default function Jobs() {
           <Plus size={16} /> New Job Search
         </button>
       </div>
-
       <div className="space-y-4">
-        {jobs.map(job => <JobCard key={job.id} job={job} />)}
+        {jobs.map(job => <JobCard key={job.id} job={job} onDelete={deleteJob} />)}
       </div>
-
       {showNew && <NewJobForm onClose={() => setShowNew(false)} />}
     </div>
   )
