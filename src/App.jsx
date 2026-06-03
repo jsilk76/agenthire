@@ -11,6 +11,7 @@ import CandidateProfile from './pages/CandidateProfile'
 import Interviews from './pages/Interviews'
 import HiringInbox from './pages/HiringInbox'
 import Login from './pages/Login'
+import ResetPassword from './pages/ResetPassword'
 import { Loader2 } from 'lucide-react'
 
 function ProtectedApp() {
@@ -25,6 +26,11 @@ function ProtectedApp() {
         </div>
       </div>
     )
+  }
+
+  // Allow reset-password page without being logged in
+  if (window.location.pathname === '/reset-password') {
+    return <ResetPassword />
   }
 
   // Supabase configured → require login. Otherwise run in local/demo mode.
@@ -44,6 +50,7 @@ function ProtectedApp() {
             <Route path="/candidates/:id" element={<CandidateProfile />} />
             <Route path="/interviews"     element={<Interviews />} />
             <Route path="/inbox"          element={<HiringInbox />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="*"               element={<Navigate to="/" replace />} />
           </Routes>
         </main>
